@@ -106,7 +106,7 @@ class CheckoutForm(forms.Form):
         ],
         initial='alipay',  # 默认选择支付宝
         widget=forms.RadioSelect(attrs={
-            'class': 'form-check-input'  # Bootstrap单选按钮样式
+            'class': 'form-check-input'  # Bootstrap的单选按钮样式
         })
     )
     # 订单备注字段
