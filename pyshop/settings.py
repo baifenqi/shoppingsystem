@@ -38,13 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'django.contrib.sites',#站点管理（后续扩展必备）
-    'django.contrib.humanize',#美化数字/日期显示(补充的内置应用)
-
-
-    'shop', #商品应用
+    'products.apps.ProductsConfig', #商品应用
     'cart', #购物车应用
-    'pyshop',#pyshop应用（后续添加的）
 ]
 
 
