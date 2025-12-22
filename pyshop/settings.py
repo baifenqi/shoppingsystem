@@ -37,8 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'django.contrib.sites',#站点管理（后续扩展必备）
+    'django.contrib.humanize',#美化数字/日期显示(补充的内置应用)
+
+
     'shop', #商品应用
     'cart', #购物车应用
+    'pyshop',#pyshop应用（后续添加的）
 ]
 
 
@@ -122,4 +128,5 @@ STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
