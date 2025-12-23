@@ -33,11 +33,10 @@ urlpatterns = [
     
     # 结算页面URL
     # 购物车页面的"去结算"按钮指向此URL
-    path('checkout/', views.checkout, name='checkout'),
+    # path('checkout/', views.checkout, name='checkout'),  # 暂未实现，保持注释
     
-    # 确认订单URL
-    # 结算页面提交订单时调用
-    path('confirm-order/', views.confirm_order, name='confirm_order'),
+    # 确认订单URL（暂未实现，注释掉避免报错，后续实现视图后再启用）
+    # path('confirm-order/', views.confirm_order, name='confirm_order'),
 ]
 
 # 注意：此文件需要被项目的根URL配置（通常是项目的urls.py）包含
