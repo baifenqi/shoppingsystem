@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.auth.models import User
 # 导入Django的最小值验证器
 from django.core.validators import MinValueValidator
-# 导入产品应用中的Product模型（假设products应用已注册）
+# 导入产品应用中的Product模型
 from products.models import Product
 
 class Cart(models.Model):
