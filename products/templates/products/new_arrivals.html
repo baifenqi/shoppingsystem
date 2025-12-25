@@ -1,0 +1,49 @@
+<!--新品上架模板-->
+
+
+<!-- 覆盖母版title，设置为“最新商品 - 购购购出发喽” -->
+{% block title %}最新商品 -购购购出发喽{% endblock %}
+
+<!-- 覆盖母版content，填充最新商品内容 -->
+{% block content %}
+<div class="row">
+
+    <!-- 页面标题：居中显示，下方添加分隔线 -->
+    <div class="col-12 mb-4">
+        <h2 class="fw-bold text-center">新品上架</h2> <!-- 粗体标题，居中 -->
+        <hr> <!-- 水平分隔线 -->
+    </div> 
+
+    <!-- 最新商品列表：栅格行，间距4px -->
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-3 col-sm-6"> <!-- 中等屏幕显示4个，小屏幕显示2个 -->
+            <div class="card h-100 shadow-sm"> <!-- 卡片高度一致，轻微阴影 --> 
+
+                <!-- 商品图片：保持4:3比例 -->
+                <div class="ratio ratio-4x3">
+                    <img src="{% if product.images.first %}{{ product.images.first.image.url }}{% else %}https://via.placeholder.com/400x300{% endif %}" 
+                         class="card-img-top object-fit-cover" alt="{{ product.name }}">
+                </div>
+
+                <!-- 商品信息 -->
+                <div class="card-body">
+                    <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                    <!-- 商品名称，超出显示省略号 -->
+                    <p class="card-text text-danger fw-bold">¥{{ product.price }}</p>
+                    <!-- 商品价格，红色粗体 -->
+                    <a href="{% url 'products:product_detail' product.id %}" class="btn btn-primary w-100">查看详情</a>
+                    <!-- 查看详情按钮，宽度100% -->
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- 无最新商品时显示提示 -->
+        <div class="col-12 text-center py-5"></div>
+            <h4>暂无新上架商品</h4>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary mt-2">去浏览全部商品</a>
+        </div>     
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

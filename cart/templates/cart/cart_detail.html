@@ -1,0 +1,157 @@
+<!--购物车详情模板-->
+
+{% extends 'base.html' %} <!-- 继承全局母版模板 -->
+
+<!-- 覆盖母版content，填充购物车内容 -->
+{% block content %}
+<div class="col-12">
+
+    <h2 class="fw-bold mb-4">我的购物车</h2> <!-- 页面标题，粗体，下方间距4px -->
+
+    {% if cart_items %}
+    <!-- 有商品时的购物车列表 -->
+    <div class="card shadow-sm mb-4"> <!-- 卡片样式，轻微阴影，下方间距4px -->
+        <div class="table-responsive"> <!-- 表格响应式，超出时显示滚动条 -->
+            <table class="table table-hover mb-0"> <!-- 表格样式，鼠标悬浮高亮，无底部外边距 -->
+
+                <thead class="table-light"> <!-- 表头浅灰色背景 -->
+                    <tr>
+                        <th width="40%">商品信息</th> <!-- 商品信息列，占40%宽度 -->
+                        <th width="15%">单价</th> <!-- 单价列，占15%宽度 -->
+                        <th width="20%">数量</th> <!-- 数量列，占20%宽度 -->
+                        <th width="15%">小计</th> <!-- 小计列，占15%宽度 -->
+                        <th width="10%">操作</th> <!-- 操作列，占10%宽度 -->
+                    </tr>
+                </thead>  
+                
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+
+                        <!-- 商品信息列：包含图片和商品名称/分类 -->
+                        <td>
+                            <div class="d-flex align-items-center"> <!-- 弹性布局，垂直居中 -->
+                                <img src="{% if item.product.images.first %}{{ item.product.images.first.image.url }}{% else %}https://via.placeholder.com/80x80{% endif %}"
+                                    alt="{{ item.product.name }}" class="me-3" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+                                <!-- 商品图片，右侧间距3px，固定尺寸，圆角 -->
+                            <div>
+                                <h6 class="mb-1">{{ item.product.name }}</h6> <!-- 商品名称，下方间距1px -->
+                                <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
+                                    <!-- 商品分类，小号字体，浅灰色 -->
+                            </div>                            
+                        </td>
+
+                        <!-- 单价列：显示商品单价，垂直居中 -->
+                        <td class="align-middle">¥{{ item.product.price }}</td>
+
+                        <!-- 数量更新列：表单提交，实现数量修改 -->
+                        <td class="align-middle">
+                            <form method="post" action="{% url 'cart:update_cart_item' item.id %}" class="d-flex justify-content-center align-items-center">
+                                {% csrf_token %} <!-- 防止CSRF攻击 -->
+                                <!-- 减号按钮：点击触发数量减1函数，传递购物车项ID -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-1" onclick="decreaseItemQuantity({{ item.id }})">-</button>
+                                <!-- 数量输入框：ID包含购物车项ID，确保唯一，居中显示 -->
+                                <input type="number" name="quantity" id="quantity-{{ item.id }}" 
+                                       value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" 
+                                       class="form-control form-control-sm text-center w-25" required>
+                                <!-- 加号按钮：点击触发数量加1函数，传递购物车项ID -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-1" onclick="increaseItemQuantity({{ item.id }})">+</button>
+                                <!-- 更新按钮：小号蓝色按钮，左侧间距2px -->
+                                <button type="submit" class="btn btn-sm btn-primary ms-2">更新</button>
+                            </form>
+                        </td>
+
+
+                        <!-- 小计列：使用自定义过滤器mul，计算“数量×单价”，垂直居中，粗体 -->
+                        <td class="align-middle fw-bold">¥{{ item.quantity|mul:item.product.price }}</td>
+
+                        <!-- 操作列：删除按钮，点击跳转至移除商品路由，弹出确认提示 -->
+                        <td class="align-middle">
+                            <a href="{% url 'cart:remove_from_cart' item.id %}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               onclick="return confirm('确定要移除该商品吗？')">
+                                删除
+                            </a>
+                        </td>
+
+                    </tr>     
+                    {% {% endfor %} %} 
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <!-- 购物车底部操作栏：左侧清空购物车，右侧总计与结算 -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+
+        <!-- 清空购物车按钮：红色边框，点击弹出确认提示 -->
+        <a href="{% url 'cart:clear_cart' %}" class="btn btn-outline-danger" 
+            onclick="return confirm('确定要清空购物车吗？所有商品将被移除！')">
+            <i class="bi bi-trash3"></i> 清空购物车 <!-- 垃圾桶图标+文字 -->
+        </a> 
+        
+        <!-- 总计与结算：右对齐 -->
+        <div class="text-right">
+            <h4 class="fw-bold">
+                订单总计：<span class="text-danger">¥{{ total_price }}</span>
+                <!-- 总金额，红色粗体 -->
+            </h4>
+
+            <p class="text-muted mb-2">已包含税费，无配送费</p> 
+            
+            <!-- 辅助文本，浅灰色 -->
+            <!-- 去结算按钮：大号蓝色按钮，点击跳转至订单确认页 -->
+            <a href="{% url 'cart:confirm_order' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-credit-card"></i> 去结算 <!-- 信用卡图标+文字 -->
+            </a> 
+        </div> 
+    </div>
+
+    {% else %}
+    <!-- 无商品时的空购物车提示 -->
+    <div class="card shadow-sm text-center py-5"> <!-- 卡片样式，居中显示，上下内边距5px -->
+        <div class="card-body">
+
+            <img src="https://via.placeholder.com/150x150?text=🛒" alt="空购物车" class="mb-3">
+
+            <!-- 购物车图标，下方间距3px -->
+            <h3 class="fw-bold mb-2">您的购物车是空的</h3> <!-- 粗体标题，下方间距2px -->
+            <p class="text-muted mb-4">快去挑选心仪的商品吧~</p>
+
+            <!-- 提示文本，浅灰色，下方间距4px -->
+            <!-- 去购物按钮：大号蓝色按钮，点击跳转至商品列表页 -->
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-shop"></i> 去购物 <!-- 商店图标+文字 -->
+            </a>
+
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+<!-- 覆盖母版extra_js，添加购物车项数量调整的JS -->
+{% block extra_js %}
+<script>
+    // 购物车项数量减1函数：根据购物车项ID获取输入框，值大于1时减1
+    function decreaseItemQuantity(itemId) {
+        const input = document.getElementById(`quantity-${itemId}`); // 模板字符串拼接ID
+        let val = parseInt(input.value); // 转换为整数
+        if (val > 1) {
+            input.value = val - 1;
+        }
+    }
+
+    // 购物车项数量加1函数：根据购物车项ID获取输入框，值小于库存时加1
+    function increaseItemQuantity(itemId) {
+        const input = document.getElementById(`quantity-${itemId}`); // 模板字符串拼接ID
+        let val = parseInt(input.value); // 转换为整数
+        const max = parseInt(input.max); // 获取库存最大值
+        if (val < max) {
+            input.value = val + 1;
+        }
+    }
+</script>
+{% endblock %}

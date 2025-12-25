@@ -1,0 +1,140 @@
+<!--首页模板-->>
+
+<!-- 继承全局母版模板base.html，必须放在第一行，实现公共导航栏、页脚的复用，保证全站样式统一 -->
+{% extends 'base.html' %}
+
+<!-- 覆盖母版的title占位块，设置首页专属标题，提升页面辨识度和SEO友好度 -->
+{% block title %}首页 - PyShop 电商平台{% endblock %}
+
+<!-- 覆盖母版的content占位块，填充首页核心业务内容，这是首页的可视化区域核心 -->
+{% block content %}
+<div class="row">
+
+    <!-- 1. 首页轮播图区域：作为首页视觉焦点，展示平台主推活动、爆款商品，吸引用户注意力，提升页面美观度 -->
+    <div class="col-12 mb-5">
+        <!-- Bootstrap轮播组件，data-bs-ride="carousel"开启自动轮播 -->
+        <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+            <!-- 轮播指示器：显示当前轮播页码，点击可切换对应轮播图 -->
+            <div class="carousel-indicators">
+                <!-- 第一个指示器，class="active"表示默认选中，对应第一张轮播图 -->
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <!-- 第二个指示器，对应第二张轮播图 -->
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <!-- 第三个指示器，对应第三张轮播图 -->
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+            <!-- 轮播内容容器：存放所有轮播图片 -->
+            <div class="carousel-inner rounded shadow-sm">
+                <!-- 第一张轮播图，class="active"表示默认显示 -->
+                <div class="carousel-item active">
+                    <img src="https://via.placeholder.com/1200x400?text=PyShop+精选好物·品质保证" class="d-block w-100" alt="精选好物轮播图">
+                    <!-- d-block w-100：让图片以块级元素显示，宽度100%适应容器 -->
+                </div>
+                <!-- 第二张轮播图：展示新品活动 -->
+                <div class="carousel-item">
+                    <img src="https://via.placeholder.com/1200x400?text=新品上架·限时8折优惠" class="d-block w-100" alt="新品优惠轮播图">
+                </div>
+                <!-- 第三张轮播图：展示推荐商品 -->
+                <div class="carousel-item">
+                    <img src="https://via.placeholder.com/1200x400?text=热门推荐·大家都在买" class="d-block w-100" alt="热门推荐轮播图">
+                </div>
+            </div>
+            <!-- 轮播左切换按钮：点击切换到上一张轮播图 -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span> <!-- 屏幕阅读器专属文本，提升可访问性 -->
+            </button>
+            <!-- 轮播右切换按钮：点击切换到下一张轮播图 -->
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span> <!-- 屏幕阅读器专属文本，提升可访问性 -->
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. 推荐商品区域：展示平台精选推荐商品，引导用户点击查看详情，实现商品引流 -->
+    <section class="mb-6">
+        <!-- 区域标题栏：左侧标题，右侧“查看更多”按钮，引导用户进入推荐商品完整列表页 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">推荐商品</h2> <!-- 粗体标题，突出区域主题 -->
+            <!-- 反向解析URL跳转到推荐商品列表页，蓝色文字+无下划线，提升点击体验 -->
+            <a href="{% url 'products:featured_products' %}" class="text-primary text-decoration-none">查看更多 →</a>
+        </div>
+        <!-- 商品列表栅格：g-4设置栅格间距，实现商品卡片之间的均匀留白 -->
+        <div class="row g-4">
+            <!-- 遍历后台传递的推荐商品数据集featured_products，生成商品卡片 -->
+            {% for product in featured_products %}
+                <!-- 栅格列：中等屏幕(col-md-3)显示4个商品，小屏幕(col-sm-6)显示2个商品，响应式适配 -->
+                <div class="col-md-3 col-sm-6">
+                    <!-- 商品卡片：h-100让卡片高度统一，shadow-sm添加轻微阴影，提升立体感 -->
+                    <div class="card h-100 shadow-sm">
+                        <!-- 商品图片：优先显示商品首张图片，无图片时显示占位图 -->
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            <!-- object-fit: cover：保持图片比例，填充容器，避免图片变形 -->
+                        {% else %}
+                            <img src="https://via.placeholder.com/200" class="card-img-top" alt="暂无商品图片" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        <!-- 商品信息容器：存放商品名称、价格、操作按钮 -->
+                        <div class="card-body">
+                            <!-- 商品名称：text-truncate实现超出部分显示省略号，避免标题过长破坏布局 -->
+                            <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                            <!-- 商品价格：text-danger设置红色，fw-bold粗体，突出价格信息 -->
+                            <p class="card-text text-danger fw-bold">¥{{ product.price }}</p>
+                            <!-- 查看详情按钮：反向解析URL跳转到商品详情页，w-100让按钮宽度100%适应卡片 -->
+                            <a href="{% url 'products:product_detail' product.id %}" class="btn btn-primary w-100">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <!-- 当推荐商品数据集为空时，显示提示文本，提升用户体验 -->
+                <p class="col-12 text-center text-muted">暂无推荐商品，敬请期待</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 3. 新品上架区域：展示平台最新上架商品，吸引用户关注新品，提升商品曝光率 -->
+    <section class="mb-6">
+        <!-- 区域标题栏：左侧标题，右侧“查看更多”按钮，引导用户进入新品完整列表页 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">新品上架</h2> <!-- 粗体标题，突出区域主题 -->
+            <!-- 反向解析URL跳转到新品上架列表页，蓝色文字+无下划线，提升点击体验 -->
+            <a href="{% url 'products:new_arrivals' %}" class="text-primary text-decoration-none">查看更多 →</a>
+        </div>
+        <!-- 商品列表栅格：g-4设置栅格间距，实现商品卡片之间的均匀留白 -->
+        <div class="row g-4">
+            <!-- 遍历后台传递的新品数据集new_products，生成商品卡片 -->
+            {% for product in new_products %}
+                <!-- 栅格列：中等屏幕(col-md-3)显示4个商品，小屏幕(col-sm-6)显示2个商品，响应式适配 -->
+                <div class="col-md-3 col-sm-6">
+                    <!-- 商品卡片：h-100让卡片高度统一，shadow-sm添加轻微阴影，提升立体感 -->
+                    <div class="card h-100 shadow-sm">
+                        <!-- 商品图片：优先显示商品首张图片，无图片时显示占位图 -->
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            <!-- object-fit: cover：保持图片比例，填充容器，避免图片变形 -->
+                        {% else %}
+                            <img src="https://via.placeholder.com/200" class="card-img-top" alt="暂无商品图片" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        <!-- 商品信息容器：存放商品名称、价格、操作按钮 -->
+                        <div class="card-body">
+                            <!-- 商品名称：text-truncate实现超出部分显示省略号，避免标题过长破坏布局 -->
+                            <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                            <!-- 商品价格：text-danger设置红色，fw-bold粗体，突出价格信息 -->
+                            <p class="card-text text-danger fw-bold">¥{{ product.price }}</p>
+                            <!-- 查看详情按钮：反向解析URL跳转到商品详情页，w-100让按钮宽度100%适应卡片 -->
+                            <a href="{% url 'products:product_detail' product.id %}" class="btn btn-primary w-100">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <!-- 当新品数据集为空时，显示提示文本，提升用户体验 -->
+                <p class="col-12 text-center text-muted">暂无新品上架，敬请期待</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+<!-- 首页专属JS占位块：当前首页无需额外交互逻辑，保留该占位块方便后续扩展（如轮播图自定义配置、商品卡片悬浮效果等） -->
+{% block extra_js %}{% endblock %}

@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'products.apps.ProductsConfig', #商品应用
+    'products', #商品应用
     'cart', #购物车应用
 ]
 
@@ -58,14 +58,18 @@ ROOT_URLCONF = 'pyshop.urls'
 
 TEMPLATES = [
     {
+        # 指定模板引擎：使用Django自带的模板后端
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        # 模板目录列表：Django会按顺序在这些目录中查找模板文件
+        'DIRS': [BASE_DIR / "templates"],  # 全局模板目录（存放公共母版base.html）
+        'APP_DIRS': True,  # 自动搜索每个应用下的"templates"目录（应用专属模板）
+        # 模板上下文处理器：向所有模板传递默认变量（如user、request等）
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.debug',  # 调试模式上下文
+                'django.template.context_processors.request',  # 传递request对象给模板
+                'django.contrib.auth.context_processors.auth',  # 传递user对象给模板（判断登录状态）
+                'django.contrib.messages.context_processors.messages',  # 传递消息提示给模板
             ],
         },
     },

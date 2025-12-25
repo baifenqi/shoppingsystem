@@ -1,0 +1,223 @@
+<!--商品详情模板-->
+
+<!-- 覆盖母版title，设置为商品名称+平台名称，提升SEO友好度 -->
+{% block title %}{{ product.name }} - 购购购出发喽{% endblock %}
+
+<!-- 覆盖母版content，填充商品详情内容 -->
+{% block content %}
+
+
+<!--首页→商品列表→商品详情→购物车” 的页面闭环与统一样式复用，支持商品展示、筛选、详情查看、购物车操作等核心前端功能-->>
+<div class="row g-4"> <!-- 栅格行，间距4px -->
+    <!-- 左侧商品图片区：占5列（中等屏幕及以上） -->
+
+    <div class="col-md-5">
+        <div class="card shadow-sm"> <!-- 卡片样式，轻微阴影 -->
+
+            <!-- 商品主图：点击缩略图可切换 -->
+            <div class="p-3"> <!-- 内边距3px，与卡片边框保持间距 -->
+                <img id="mainProductImg" 
+                     src="{% if images.first %}{{ images.first.image.url }}{% else %}https://via.placeholder.com/500x500?text=暂无图片{% endif %}" 
+                     class="img-fluid rounded" alt="{{ product.name }}">
+                <!-- img-fluid：响应式图片，自动适应容器宽度；rounded：圆角样式 -->
+            </div>
+
+            <!-- 商品缩略图：多图切换，横向排列 -->
+            <div class="d-flex flex-wrap p-2 gap-2 justify-content-center">
+                <!-- d-flex：弹性布局；flex-wrap：自动换行；gap-2：项目间距2px；justify-content-center：居中对齐 -->
+                {% for img in images %}
+                <div class="thumbnail-item" style="cursor: pointer;"> <!-- 鼠标悬浮显示手型，提示可点击 -->
+                    <img src="{{ img.image.url }}" class="img-thumbnail" alt="{{ img.alt_text }}"
+                        style="width: 80px; height: 80px; object-fit: cover;"
+                        onclick="switchMainImg('{{ img.image.url }}')">
+                    <!-- img-thumbnail：缩略图样式；onclick：点击触发切换主图函数 -->
+                </div>
+
+                {% empty %}
+                <p class="text-muted">暂无商品图片</p> <!-- 无图片时显示提示 -->
+                {% endfor %}
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- 右侧商品信息区：占7列（中等屏幕及以上） -->
+    <div class="col-md-7">
+        <div class="card shadow-sm p-4"> <!-- 卡片样式，内边距4px -->
+            <h1 class="h3 fw-bold">{{ product.name }}</h1> <!-- 商品名称，h3字号，粗体 -->
+
+            <hr> <!-- 水平分隔线，分隔名称与其他信息 -->
+
+            <p class="text-muted mb-3"></p>
+                <span class="me-3"><i class="bi bi-folder2"></i> {{ product.category.name }}</span> <!-- 分类图标+名称 -->
+                <span class="me-3"><i class="bi bi-eye"></i> 浏览量：{{ product.view_count }}</span> <!-- 浏览量图标+数值 -->
+                <span><i class="bi bi-fire"></i> 销量：{{ product.sales_count }}</span> <!-- 销量图标+数值 -->
+            </p>
+
+            <!-- 商品价格区：突出显示原价和优惠价 -->
+
+            <div class="mb-4">
+                <span class="text-danger fw-bold fs-2">¥{{ product.price }}</span> <!-- 现价，红色粗体，大号字体 -->
+                <!-- 若有原价且原价高于现价，显示原价（删除线）和优惠金额 -->
+                {% if product.oldprice and product.oldprice > product.price %} 
+                <span class="text-muted text-decoration-line-through ms-2">¥{{ product.oldprice }}</span><!-- text-decoration-line-through：删除线样式 -->
+                <span class="badge bg-danger ms-2">省¥{{ product.oldprice|sub:product.price }}</span><!-- 优惠徽章，红色背景 -->
+                {% endif %}
+            </div>
+
+            <!-- 商品简介区 -->
+            <div class="mb-4">
+                <h5 class="fw-bold">商品简介</h5> <!-- 标题粗体 -->
+                <p class="text-muted">{{ product.short_description|default:"暂无商品简介" }}</p>
+                <!-- default：若short_description为空，显示默认文本 -->
+            </div>
+
+            <!-- 商品属性区：按两列排列 -->
+            <div class="mb-4">
+                <h5 class="fw-bold">商品属性</h5> <!-- 标题粗体 -->
+                <div class="row">
+                    {% for attr in attributes %}
+                    <div class="col-6 mb-2"> <!-- 每列占6列，间距2px -->
+                        <span class="fw-medium">{{ attr.attribute.name }}: </span> <!-- 属性名，中等粗体 -->
+                        <span class="text-muted">{{ attr.value }}</span> <!-- 属性值，浅灰色 -->
+                    </div>
+                    {% empty %}
+                    <p class="text-muted col-12">暂无商品属性</p> <!-- 无属性时显示提示 -->
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 加入购物车表单：提交商品ID和购买数量 -->
+            <form method="post" action="{% url 'products:add_to_cart_from_detail' product.id %}" class="mt-5">
+
+                {% csrf_token %} <!-- Django必加，防止跨站请求伪造（CSRF）攻击，必须放在表单内 -->
+
+                <div class="row align-items-center"> <!-- 行内元素垂直居中 -->
+                    <!-- 购买数量输入框：占4列（中等屏幕及以上） -->
+                    <div class="col-md-4 mb-3">
+                        <label for="quantity" class="form-label fw-medium">购买数量</label> <!-- 标签，中等粗体 -->
+                        <div class="input-group"> <!-- 输入框组，包含减号、输入框、加号 -->
+                            <button type="button" class="btn btn-outline-secondary" onclick="decreaseQuantity()">-</button>
+                            <!-- 减号按钮，点击触发数量减1函数 -->
+                            <input type="number" id="quantity" name="quantity" class="form-control text-center" 
+                                   value="1" min="1" max="{{ product.stock }}" required>
+                            <!-- 数量输入框，居中显示，最小值1，最大值为商品库存，必填 -->
+                            <button type="button" class="btn btn-outline-secondary" onclick="increaseQuantity()">+</button>
+                            <!-- 加号按钮，点击触发数量加1函数 -->
+                        </div>
+                        <div class="form-text text-muted">库存：{{ product.stock }} 件</div>
+                        <!-- 辅助文本，显示商品库存数量 -->
+                    </div>
+                    
+                    <!-- 加入购物车按钮：占8列（中等屏幕及以上） -->
+                    <div class="col-md-8 mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-cart-plus"></i> 加入购物车 <!-- 购物车图标+文字，大号按钮，宽度100% -->
+                        </button>
+                    </div> 
+                </div>
+            </form> 
+        </div>
+    </div>
+</div>
+
+<!-- 商品详情标签页：下方显示商品详情和相关商品 -->
+<div class="row mt-4"> <!-- 与上方内容间距4px -->
+    <div class="col-12">
+
+        <div class="card shadow-sm"> <!-- 卡片样式，轻微阴影 -->
+            <div class="card-header bg-light"> <!-- 卡片头部，浅灰色背景 -->
+                <!-- 标签页导航：商品详情、相关商品 -->
+                <ul class="nav nav-tabs card-header-tabs" id="productTab" role="tablist">
+
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="detail-tab" data-bs-toggle="tab" data-bs-target="#detail" type="button" role="tab"></button>
+                            商品详情 <!-- 激活状态，默认显示 -->
+                        </button>
+                    </li>
+
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="related-tab" data-bs-toggle="tab" data-bs-target="#related" type="button" role="tab"></button>
+                            相关商品 <!-- 未激活状态，点击切换 -->
+                        </button>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="tab-content" id="productTabContent">
+
+                <!-- 商品详情内容：默认显示 -->
+                <div class="tab-pane fade show active" id="detail" role="tabpanel">
+                    <div class="bg-light p-4 rounded"> <!-- 浅灰色背景，内边距4px，圆角 -->
+                        {{ product.description|default:"暂无详细描述"|safe }}
+                            <!-- safe：允许HTML标签生效，若商品详情包含HTML格式，可正常渲染 -->  
+                    </div>                    
+                </div>
+
+                <!-- 相关商品内容：点击标签后显示 -->
+                <div class="tab-pane fade" id="related" role="tabpanel">
+                    <div class="row g-3"> <!-- 栅格行，间距3px -->
+                        {% for related in related_products %}
+                        <div class="col-md-3"> <!-- 每列占3列，每行显示4个商品 -->
+                            <div class="card h-100"> <!-- 卡片高度一致 -->
+                                <img src="{% if related.images.first %}{{ related.images.first.image.url }}{% else %}https://via.placeholder.com/200x200{% endif %}" 
+                                    class="card-img-top" alt="{{ related.name }}" style="height: 150px; object-fit: cover;">
+                                <!-- 商品图片，固定高度，保持比例 --> 
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate">{{ related.name }}</h6>
+                                    <!-- 商品名称，超出显示省略号 -->
+                                    <p class="card-text text-danger fw-bold">¥{{ related.price }}</p>
+                                    <!-- 商品价格，红色粗体 -->
+                                    <a href="{% url 'products:product_detail' related.id %}" class="btn btn-sm btn-primary w-100">查看</a>
+                                    <!-- 查看详情按钮，小号按钮，宽度100% -->
+                                </div> 
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted col-12 text-center">暂无相关商品</p>
+                        <!-- 无相关商品时显示提示 -->   
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+{% endblock %}
+
+
+<!-- 覆盖母版extra_js，添加图片切换和数量调整的JS -->
+{% block extra_js %}
+<script>
+    // 切换商品主图函数：接收图片URL，替换主图的src属性
+    function switchMainImg(imgUrl) {
+        document.getElementById('mainProductImg').src = imgUrl;
+    }
+
+    // 数量减1函数：获取数量输入框，值大于1时减1
+    function decreaseQuantity() {
+        const input = document.getElementById('quantity');
+        let val = parseInt(input.value); // 转换为整数
+        if (val > 1) {
+            input.value = val - 1;
+        }
+    }
+
+    // 数量加1函数：获取数量输入框，值小于库存时加1
+    function increaseQuantity() {
+        const input = document.getElementById('quantity');
+        let val = parseInt(input.value); // 转换为整数
+        const max = parseInt(input.max); // 获取库存最大值
+        if (val < max) {
+            input.value = val + 1;
+        }
+    }
+</script>
+{% endblock %}
