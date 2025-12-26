@@ -6,6 +6,8 @@ from django.db import models
 from django.contrib.auth.models import User
 # 导入Django的最小值验证器
 from django.core.validators import MinValueValidator
+# 导入Decimal用于金额精度控制（新增）
+from decimal import Decimal
 # 导入产品应用中的Product模型
 from products.models import Product
 
@@ -38,14 +40,44 @@ class Cart(models.Model):
         return f"{self.user.username}的购物车"
     
     def total_price(self):
-        """计算购物车中所有商品的总金额"""
-        # 遍历所有购物车项，计算每个购物车项的总价并求和
-        return sum(item.total_price() for item in self.items.all())
+        """
+        计算购物车中所有商品的总金额（修改：添加异常防护+空值处理）
+        :return: 总金额（Decimal类型，保证金额精度），空购物车返回Decimal('0.00')
+        """
+        total = Decimal('0.00')  # 初始化总金额为0，Decimal类型保证精度
+        try:
+            # 遍历所有购物车项，累加每个项的总价
+            for item in self.items.all():
+                item_total = item.total_price()
+                # 确保item_total是Decimal类型，避免类型错误
+                if isinstance(item_total, (int, float)):
+                    item_total = Decimal(str(item_total))
+                total += item_total
+        except Exception as e:
+            # 捕获异常（如商品价格为空），返回0避免页面崩溃
+            print(f"计算购物车总金额出错：{e}")
+            total = Decimal('0.00')
+        return total
+    
+    # 新增别名方法，兼容阶段二的命名习惯（可选）
+    def get_total_price(self):
+        """别名方法，与阶段二教程中的命名一致，返回购物车总金额"""
+        return self.total_price()
     
     def item_count(self):
-        """计算购物车中商品的总数量"""
-        # 返回购物车项的数量统计
-        return self.items.count()
+        """
+        计算购物车中商品的总件数（修改：修复逻辑错误，统计总数量而非商品种类数）
+        :return: 所有商品的数量总和（int）
+        """
+        total_quantity = 0
+        try:
+            # 遍历所有购物车项，累加每个项的quantity
+            for item in self.items.all():
+                total_quantity += item.quantity
+        except Exception as e:
+            print(f"计算购物车商品总数出错：{e}")
+            total_quantity = 0
+        return total_quantity
 
 class CartItem(models.Model):
     """购物车项模型，记录购物车中单个商品的信息"""
@@ -89,6 +121,23 @@ class CartItem(models.Model):
         return f"{self.quantity} × {self.product.name}"
     
     def total_price(self):
-        """计算当前购物车项的总价"""
-        # 商品数量乘以商品单价
-        return self.quantity * self.product.price
+        """
+        计算当前购物车项的总价（修改：添加异常防护+精度保证）
+        :return: 单个购物车项的总价（Decimal类型），出错返回Decimal('0.00')
+        """
+        try:
+            # 确保price是Decimal类型（需Product的price字段为DecimalField）
+            price = self.product.price
+            if isinstance(price, (int, float)):
+                price = Decimal(str(price))
+            # 数量×单价，返回Decimal类型
+            return self.quantity * price
+        except Exception as e:
+            # 捕获异常（如商品价格为空、数量非数字）
+            print(f"计算购物车项总价出错：{e}")
+            return Decimal('0.00')
+    
+    # 新增别名方法，兼容阶段二的命名习惯（可选）
+    def get_subtotal(self):
+        """别名方法，与阶段二教程中的命名一致，返回购物车项小计"""
+        return self.total_price()

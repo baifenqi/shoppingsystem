@@ -127,7 +127,12 @@ class Product(models.Model):
     # 商品销售价格，使用DecimalField确保精度
     # max_digits=10表示最多10位数字（包括小数位）
     # decimal_places=2表示保留2位小数
-    price = models.DecimalField('价格', max_digits=10, decimal_places=2, default=0)
+    price = models.DecimalField(
+        '商品单价',
+        max_digits=10,  # 最大位数（含小数）
+        decimal_places=2,  # 小数点后2位
+        validators=[MinValueValidator(Decimal('0.01'))]  # 最低价格0.01元
+    )
     
     # 商品所属分类，多对一关系
     # on_delete=SET_NULL表示分类删除时商品不删除，分类字段设为NULL

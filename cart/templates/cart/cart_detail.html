@@ -2,6 +2,8 @@
 
 {% extends 'base.html' %} <!-- 继承全局母版模板 -->
 
+{% load cart_tags %}  <!-- 新增！加载购物车自定义过滤器，必须放在extends之后、其他内容之前 -->
+
 <!-- 覆盖母版content，填充购物车内容 -->
 {% block content %}
 <div class="col-12">

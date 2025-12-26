@@ -7,6 +7,7 @@ from .models import Cart, CartItem
 # 从products应用中导入Product模型
 from products.models import Product
 
+
 class CartItemInline(admin.TabularInline):
     """购物车项内联类，允许在购物车编辑页面直接管理购物车项"""
     # 指定内联关联的模型为CartItem
