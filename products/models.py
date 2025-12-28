@@ -104,7 +104,6 @@ class Product(models.Model):
         ('draft', '草稿'),          # 商品已创建但未上架
         ('published', '已上架'),     # 商品已上架可销售
         ('out_of_stock', '缺货'),    # 商品暂时缺货
-        ('out_of_stock', '缺货'),    # 商品暂时缺货
         ('discontinued', '已下架'),  # 商品已永久下架
     )
     

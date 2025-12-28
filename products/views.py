@@ -5,6 +5,9 @@
 """
 
 # 导入Django核心模块
+# 在文件顶部添加
+from django.contrib.auth import get_user_model
+# 然后修改所有使用 User 的地方
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, View
 from django.db.models import Q, Count, Avg, Min, Max
@@ -191,9 +194,11 @@ class ProductDetailView(DetailView):
         )
         
         # 获取可用的颜色
-        context['available_colors'] = Color.objects.filter(
-            id__in=inventory_items.values_list('color_id', flat=True).distinct()
-        )
+        color_ids = inventory_items.exclude(color_id=None).values_list('color_id', flat=True).distinct()
+        if color_ids:
+          context['available_colors'] = Color.objects.filter(id__in=color_ids)
+        else:
+          context['available_colors'] = Color.objects.none()
         
         # 获取可用的尺寸
         context['available_sizes'] = Size.objects.filter(
@@ -479,8 +484,8 @@ def quick_add_to_cart(request, product_id):
         # 计算购物车最新信息
         # ---------------------------
         cart_info = {
-            'item_count': cart.get_item_count(),  # 购物车商品总数
-            'total_price': float(cart.get_total_price()),  # 购物车总金额
+            'item_count': cart.item_count(),  # 购物车商品总数
+            'total_price': float(cart.total_price()),  # 购物车总金额
             'item_name': product.name,  # 刚添加的商品名称
             'quantity': cart_item.quantity  # 当前购物车项数量
         }

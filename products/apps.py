@@ -15,3 +15,8 @@ class ProductsConfig(AppConfig):  # 修改类名
         """应用就绪时自动调用的方法，用于执行初始化操作"""
         # 如果需要信号处理，在这里导入
         import products.signals  # 修改这里
+        # products/apps.py
+def ready(self):
+    """应用就绪时自动调用的方法，用于执行初始化操作"""
+    # 确保信号被正确导入
+    import products.signals

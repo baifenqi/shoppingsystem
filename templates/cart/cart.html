@@ -1,0 +1,34 @@
+<!-- templates/cart/cart_detail.html 中添加 -->
+{% if cart_items %}
+    <!-- 购物车商品列表 -->
+    ...
+    
+    <!-- 推荐商品区域 -->
+    <div class="mt-5">
+        <h4>猜你喜欢</h4>
+        <div id="cart-recommendations">
+            <!-- 通过AJAX加载推荐商品 -->
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // AJAX加载推荐商品
+    $(document).ready(function() {
+        $.ajax({
+            url: '/recommendations/api/recommend/?type=cart&format=html',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(data) {
+                $('#cart-recommendations').html(data);
+            },
+            error: function() {
+                $('#cart-recommendations').html('<p class="text-muted">推荐加载失败</p>');
+            }
+        });
+    });
+    </script>
+{% endif %}

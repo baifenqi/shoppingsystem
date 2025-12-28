@@ -1,0 +1,21 @@
+<!-- templates/products/product_detail.html 中添加 -->
+<div class="mt-5">
+    <h4>相关商品推荐</h4>
+    <div id="related-recommendations">
+        <!-- AJAX加载 -->
+    </div>
+</div>
+
+<script>
+// 在商品详情页加载相关推荐
+$(document).ready(function() {
+    var productId = {{ product.id }};
+    $.ajax({
+        url: '/recommendations/api/recommend/?type=related&product_id=' + productId + '&format=html',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(data) {
+            $('#related-recommendations').html(data);
+        }
+    });
+});
+</script>

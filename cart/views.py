@@ -8,12 +8,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # 导入JSON响应类
 from django.http import JsonResponse
+from django.contrib.auth import get_user_model  # 添加这行
 # 导入当前应用的模型
 from .models import Cart, CartItem
 # 导入产品模型（假设products应用已注册）
 from products.models import Product
 # 导入JSON处理模块
 import json
+# 获取用户模型
+User = get_user_model()  # 添加这行
 
 @login_required  # 要求用户登录才能访问
 def cart_detail(request):

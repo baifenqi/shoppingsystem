@@ -3,10 +3,12 @@
 # 信号用于在特定动作发生时执行相关操作，实现松耦合
 from django.db.models.signals import post_save, pre_delete, m2m_changed
 from django.dispatch import receiver
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model  # 修改这行
 from .models import Cart, CartItem
 from products.models import Product
 from django.core.cache import cache
+# 获取用户模型
+User = get_user_model()  # 添加这行
 
 @receiver(post_save, sender=User)
 def create_user_cart(sender, instance, created, **kwargs):

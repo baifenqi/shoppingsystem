@@ -40,6 +40,8 @@ INSTALLED_APPS = [
 
     'products', #商品应用
     'cart', #购物车应用
+    'users',
+    'recommendations',
 ]
 
 
@@ -128,4 +130,4 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+AUTH_USER_MODEL = 'users.CustomUser'#2025/12/27/23：36添加

@@ -1,9 +1,12 @@
 # forms.py
 # 购物车应用的表单定义文件，定义用于用户输入验证和数据处理的表单类
 from django import forms
+from django.contrib.auth import get_user_model  # 添加这行
 from .models import CartItem
 from django.core.validators import MinValueValidator, MaxValueValidator
 from products.models import Product
+# 获取用户模型
+User = get_user_model()  # 添加这行
 
 class AddToCartForm(forms.Form):
     """添加到购物车表单，用于在商品详情页添加商品到购物车"""

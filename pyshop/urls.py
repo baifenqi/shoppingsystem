@@ -25,6 +25,8 @@ urlpatterns = [
     # 根路径指向products的首页视图（替代原商品列表）
     path('', include('products.urls', namespace='products')),
     path('cart/', include('cart.urls', namespace='cart')),
+    path('users/', include('users.urls', namespace='users')),  # 添加这一行
+    path('recommendations/', include('recommendations.urls', namespace='recommendations')),  # 添加这一行
 ]
 
 if settings.DEBUG:

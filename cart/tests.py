@@ -3,13 +3,15 @@
 # 导入Django测试框架
 from django.test import TestCase, Client
 # 导入Django用户模型
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model  # 修改这行
 # 导入Django的URL反转函数
 from django.urls import reverse
 # 导入当前应用的模型
 from .models import Cart, CartItem
 # 导入产品模型（假设products应用已注册）
 from products.models import Product
+# 获取用户模型
+User = get_user_model()  # 添加这行
 
 class CartModelTests(TestCase):
     """购物车模型测试类，测试模型的各种方法"""

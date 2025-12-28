@@ -2,8 +2,7 @@
 # 数据模型定义文件，定义购物车相关的数据库模型
 # 导入Django模型模块
 from django.db import models
-# 导入Django内置的用户模型
-from django.contrib.auth.models import User
+from django.conf import settings  # 添加这行
 # 导入Django的最小值验证器
 from django.core.validators import MinValueValidator
 # 导入Decimal用于金额精度控制（新增）
@@ -16,7 +15,7 @@ class Cart(models.Model):
     # 定义与User模型的一对一关系字段
     # 一个用户只能有一个购物车
     user = models.OneToOneField(
-        User,  # 关联的模型是User
+        settings.AUTH_USER_MODEL,  # 修改这里
         on_delete=models.CASCADE,  # 用户删除时级联删除购物车
         related_name='cart',  # 反向查询名称，可通过user.cart访问
         verbose_name='用户'  # 在管理后台显示的字段名
