@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }}的资料 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm rounded">
+                <div class="card-header bg-primary text-white text-center">
+                    <h5 class="mb-0">{{ profile_user.username }}的个人资料</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- 展示用户公开信息（适配CustomUser模型） -->
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">用户名</label>
+                        <p class="form-control-plaintext">{{ profile_user.username }}</p>
+                    </div>
+                    
+                    {% if profile_user.email %}
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">邮箱</label>
+                            <p class="form-control-plaintext">{{ profile_user.email }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if profile_user.phone %}
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">手机号</label>
+                            <p class="form-control-plaintext">{{ profile_user.phone }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if profile_user.date_joined %}
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">注册时间</label>
+                            <p class="form-control-plaintext">{{ profile_user.date_joined|date:"Y-m-d H:i" }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- 返回按钮 -->
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-primary rounded">返回我的个人中心</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

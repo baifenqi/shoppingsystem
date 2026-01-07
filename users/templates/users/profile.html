@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}个人中心 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm rounded">
+                <div class="card-header bg-primary text-white text-center">
+                    <h5 class="mb-0">我的个人中心</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- 个人信息标题 -->
+                    <h6 class="mb-4 text-secondary">更新个人资料</h6>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- 资料更新成功提示 -->
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <div class="alert alert-{{ msg.tags }} alert-dismissible fade show mb-3" role="alert">
+                                    {{ msg }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- 表单错误提示 -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <p class="mb-0">{{ field.label }}：{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- 遍历更新表单字段（支持文件上传） -->
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <!-- 特殊处理文件上传控件 -->
+                                {% if field.field.widget.input_type == 'file' %}
+                                    {{ field }}
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <small class="text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <!-- 提交按钮 + 退出登录按钮 -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 rounded">保存修改</button>
+                            <a href="{% url 'users:logout' %}" class="btn btn-outline-danger rounded">退出登录</a>
+                        </div>
+                    </form>
+
+                    <!-- 快捷入口：查看我的订单/购物车（衔接现有功能） -->
+                    <div class="mt-4">
+                        <hr>
+                        <h6 class="mb-3 text-secondary">我的快捷入口</h6>
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-primary rounded">我的购物车</a>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 统一表单样式
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        if (!el.classList.contains('form-control')) {
+            el.classList.add('form-control', 'rounded');
+        }
+    });
+</script>
+{% endblock %}

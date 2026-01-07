@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}登录 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm rounded">
+                <div class="card-header bg-primary text-white text-center">
+                    <h5 class="mb-0">用户登录</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'users:login' %}">
+                        {% csrf_token %}
+                        
+                        <!-- 消息提示（登录成功/失败） -->
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <div class="alert alert-{{ msg.tags }} alert-dismissible fade show mb-3" role="alert">
+                                    {{ msg }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- 表单错误提示 -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                用户名或密码错误，请重新输入！
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- 用户名输入框 -->
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">用户名</label>
+                            {{ form.username }}
+                        </div>
+
+                        <!-- 密码输入框 -->
+                        <div class="mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">密码</label>
+                            {{ form.password }}
+                        </div>
+
+                        <!-- 隐藏字段：支持跳转到原页面（可选优化） -->
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <!-- 登录按钮 -->
+                        <button type="submit" class="btn btn-primary w-100 rounded">登录</button>
+
+                        <!-- 跳转注册 -->
+                        <div class="text-center mt-3">
+                            <small class="text-muted">还没有账号？<a href="{% url 'users:register' %}" class="text-primary">立即注册</a></small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 为Django表单控件自动添加Bootstrap样式
+    document.querySelectorAll('input').forEach(input => {
+        if (!input.classList.contains('form-control')) {
+            input.classList.add('form-control', 'rounded');
+        }
+    });
+</script>
+{% endblock %}

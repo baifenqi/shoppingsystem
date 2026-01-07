@@ -1,38 +1,28 @@
-<!--商品列表模板-->>
-
-<!-- 继承全局母版模板，必须放在第一行 -->
+<!--商品列表模板-->
 {% extends 'base.html' %}
 
-<!-- 覆盖母版的title占位块，设置当前页面标题为“全部商品 - PyShop” -->
 {% block title %}全部商品 - PyShop{% endblock %}
 
-<!-- 覆盖母版的content占位块，填充商品列表的核心内容 -->
 {% block content %}
 <div class="row">
-    <!-- 左侧筛选栏：占3列（中等屏幕及以上），用于分类和价格筛选 -->
     <div class="col-md-3">
-        <!-- 分类筛选卡片：使用Bootstrap卡片样式，美观整洁 -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-light fw-bold">商品分类</div> <!-- 卡片头部，浅灰色背景，粗体标题 -->
-            <div class="card-body p-0"> <!-- 卡片内容区，取消默认内边距 -->
-                <ul class="list-group list-group-flush"> <!-- 无边框列表，贴合卡片样式 -->
-                    <!-- 全部商品选项：点击后重置分类筛选 -->
+            <div class="card-header bg-light fw-bold">商品分类</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
                     <li class="list-group-item">
                         <a href="{% url 'products:product_list' %}" class="text-decoration-none text-dark">
-                            <!-- 判断是否选中全部商品（无分类参数时），选中则显示对勾图标 -->
                             {% if not selected_category %}<i class="bi bi-check text-primary"></i> {% endif %}
                             全部商品
                         </a>
                     </li>
-                    <!-- 遍历所有商品分类，生成分类筛选选项 -->
                     {% for category in categories %}
                     <li class="list-group-item">
                         <a href="{% url 'products:product_list' %}?category={{ category.id }}" class="text-decoration-none text-dark">
-                            <!-- 判断当前分类是否被选中（URL参数与分类ID一致），选中则显示对勾图标 -->
                             {% if selected_category == category.id|stringformat:"i" %}
                                 <i class="bi bi-check text-primary"></i> 
                             {% endif %}
-                            {{ category.name }} <!-- 显示分类名称 -->
+                            {{ category.name }}
                         </a>
                     </li>
                     {% endfor %}
@@ -40,62 +30,50 @@
             </div>
         </div>
 
-        <!-- 价格筛选卡片：使用Bootstrap卡片样式，实现最低价和最高价筛选 -->
         <div class="card shadow-sm">
-            <div class="card-header bg-light fw-bold">价格筛选</div> <!-- 卡片头部标题 -->
+            <div class="card-header bg-light fw-bold">价格筛选</div>
             <div class="card-body">
-                <!-- 价格筛选表单：method="get"提交，通过URL参数传递筛选条件，needs-validation开启表单验证 -->
                 <form method="get" class="needs-validation" novalidate>
-                    <!-- 保留原有筛选参数（分类、排序等）：遍历URL中的所有参数，排除价格和页码，重新放入表单 -->
                     {% for key, value in request.GET.items %}
-                        {% if key not in ['min_price', 'max_price', 'page'] %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% if key != 'min_price' and key != 'max_price' and key != 'page' %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">  
                         {% endif %}
                     {% endfor %}
 
-                    <!-- 最低价输入框 -->
                     <div class="mb-3">
-                        <label for="min_price" class="form-label">最低价（¥）</label> <!-- 表单标签 -->
+                        <label for="min_price" class="form-label">最低价（¥）</label>
                         <input type="number" class="form-control" id="min_price" name="min_price" 
-                               value="{{ min_price }}" min="0" step="0.01" required> <!-- 数值输入框，支持小数，必填 -->
-                        <div class="invalid-feedback">请输入有效的最低价</div> <!-- 验证失败提示文本 -->
+                               value="{{ min_price|default:'' }}" min="0" step="0.01" required>
+                        <div class="invalid-feedback">请输入有效的最低价</div>
                     </div>
 
-                    <!-- 最高价输入框 -->
                     <div class="mb-3">
-                        <label for="max_price" class="form-label">最高价（¥）</label> <!-- 表单标签 -->
+                        <label for="max_price" class="form-label">最高价（¥）</label>
                         <input type="number" class="form-control" id="max_price" name="max_price" 
-                               value="{{ max_price }}" min="0" step="0.01" required> <!-- 数值输入框，支持小数，必填 -->
-                        <div class="invalid-feedback">请输入有效的最高价</div> <!-- 验证失败提示文本 -->
+                               value="{{ max_price|default:'' }}" min="0" step="0.01" required>
+                        <div class="invalid-feedback">请输入有效的最高价</div>
                     </div>
 
-                    <!-- 筛选按钮：宽度100%，占满卡片宽度 -->
                     <button type="submit" class="btn btn-primary w-100">确认筛选</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 右侧商品列表：占9列（中等屏幕及以上），展示商品卡片和分页 -->
     <div class="col-md-9">
-        <!-- 顶部筛选统计 + 排序：左侧显示商品总数，右侧显示排序下拉框 -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <p class="text-muted mb-0">
                 共找到 <span class="fw-bold text-primary">{{ page_obj.paginator.count }}</span> 件商品
-                <!-- page_obj.paginator.count：获取总商品数，page_obj是Django分页对象 -->
             </p>
 
-            <!-- 排序下拉框表单：选择排序方式后自动提交表单 -->
             <form method="get" class="d-flex align-items-center">
-                <!-- 保留原有筛选参数：排除排序和页码，重新放入表单 -->
                 {% for key, value in request.GET.items %}
                     {% if key != 'sort' and key != 'page' %}
                         <input type="hidden" name="{{ key }}" value="{{ value }}">
                     {% endif %}
                 {% endfor %}
 
-                <label for="sort" class="me-2 mb-0">排序：</label> <!-- 排序标签，右侧间距2px -->
-                <!-- 排序下拉框：onchange="this.form.submit()"选择后自动提交表单 -->
+                <label for="sort" class="me-2 mb-0">排序：</label>
                 <select name="sort" id="sort" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>默认排序</option>
                     <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>价格从低到高</option>
@@ -105,42 +83,31 @@
             </form>
         </div>
 
-        <!-- 商品卡片列表：使用栅格系统，每行显示3个商品（中等屏幕）、2个商品（小屏幕） -->
         <div class="row g-4">
-            <!-- 遍历商品列表，生成商品卡片 -->
             {% for product in products %}
             <div class="col-md-4 col-sm-6">
-                <!-- 商品卡片：h-100让卡片高度一致，shadow-sm添加轻微阴影 -->
                 <div class="card h-100 shadow-sm">
-                    <!-- 商品图片：使用ratio保持4:3比例，避免图片变形 -->
                     <div class="ratio ratio-4x3">
-                        {% if product.images.first %}
-                            <!-- 若商品有图片，显示第一张图片，object-fit: cover保持图片比例，填充容器 -->
-                            <img src="{{ product.images.first.image.url }}" class="card-img-top object-fit-cover" 
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top object-fit-cover" 
                                  alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
                         {% else %}
-                            <!-- 若商品无图片，显示占位图 -->
                             <img src="https://via.placeholder.com/400x300?text=暂无图片" class="card-img-top" 
                                  alt="暂无商品图片">
                         {% endif %}
                     </div>
-                    <!-- 商品信息区：卡片内容 -->
                     <div class="card-body">
                         <h5 class="card-title text-truncate">{{ product.name }}</h5>
-                        <!-- text-truncate：超出部分显示省略号，避免标题过长 -->
                         <p class="card-text text-muted small mb-2">
-                            {{ product.category.name }} <!-- 显示商品所属分类 -->
+                            {{ product.category.name }}
                         </p>
                         <p class="card-text fw-bold text-danger fs-5">¥{{ product.price }}</p>
-                        <!-- fw-bold粗体，text-danger红色，fs-5字体大小5号，突出价格 -->
-                        <!-- 查看详情按钮：反向解析到商品详情页，传递商品ID -->
                         <a href="{% url 'products:product_detail' product.id %}" 
                            class="btn btn-primary w-100 mt-2">查看详情</a>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <!-- 当商品列表为空时，显示提示信息 -->
             <div class="col-12 text-center py-5">
                 <img src="https://via.placeholder.com/100x100?text=📦" alt="无商品" class="mb-3">
                 <h4>暂无符合条件的商品</h4>
@@ -150,11 +117,9 @@
             {% endfor %}
         </div>
 
-        <!-- 分页组件：当商品总页数大于1时显示，实现首页、上一页、当前页、下一页、尾页切换 -->
         {% if page_obj.paginator.num_pages > 1 %}
         <nav class="mt-5">
-            <ul class="pagination justify-content-center"> <!-- 分页居中显示 -->
-                <!-- 上一页和首页：若有上一页则显示，否则禁用 -->
+            <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
                     <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
@@ -171,10 +136,8 @@
                 <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
                 {% endif %}
 
-                <!-- 当前页码：高亮显示，显示“当前页/总页数” -->
                 <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</a></li>
 
-                <!-- 下一页和尾页：若有下一页则显示，否则禁用 -->
                 {% if page_obj.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
@@ -197,29 +160,20 @@
 </div>
 {% endblock %}
 
-
-
-
-
-
-
-<!-- 覆盖母版的extra_js占位块，添加表单验证的自定义JS -->
 {% block extra_js %}
 <script>
-    // Bootstrap表单验证：阻止无效表单提交，显示验证提示
     (() => {
-        'use strict' // 启用严格模式，避免语法错误
-        const forms = document.querySelectorAll('.needs-validation') // 获取所有需要验证的表单
-        // 遍历表单，添加提交事件监听
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
         Array.from(forms).forEach(form => {
             form.addEventListener('submit', event => {
-                if (!form.checkValidity()) { // 若表单验证无效
-                    event.preventDefault() // 阻止表单提交
-                    event.stopPropagation() // 阻止事件冒泡
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
                 }
-                form.classList.add('was-validated') // 添加验证类，显示验证样式
+                form.classList.add('was-validated')
             }, false)
         })
     })()
 </script>
-{% endblock %} 
+{% endblock %}

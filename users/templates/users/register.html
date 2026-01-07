@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}注册 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm rounded">
+                <div class="card-header bg-primary text-white text-center">
+                    <h5 class="mb-0">用户注册</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'users:register' %}">
+                        {% csrf_token %}
+                        
+                        <!-- 注册成功提示 -->
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <div class="alert alert-{{ msg.tags }} alert-dismissible fade show mb-3" role="alert">
+                                    {{ msg }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- 表单错误提示 -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <p class="mb-0">{{ field.label }}：{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- 遍历表单字段（适配自定义UserRegisterForm） -->
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <!-- 字段帮助文本 -->
+                                {% if field.help_text %}
+                                    <small class="text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <!-- 注册按钮 -->
+                        <button type="submit" class="btn btn-primary w-100 rounded">注册</button>
+
+                        <!-- 跳转登录 -->
+                        <div class="text-center mt-3">
+                            <small class="text-muted">已有账号？<a href="{% url 'users:login' %}" class="text-primary">立即登录</a></small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
