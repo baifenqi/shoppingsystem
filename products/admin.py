@@ -181,7 +181,7 @@ class ProductAdmin(admin.ModelAdmin):
     # 分栏显示字段，更清晰
     fieldsets = (
         ('基础信息', {
-            'fields': (('name', 'sku'), ('slug', 'status'), 'is_featured', 'is_active')  # 新增：补充is_active字段，控制商品是否上架
+            'fields': (('name', 'sku'), ('slug', 'status'), 'is_featured')  # 新增：补充is_active字段，控制商品是否上架
         }),
 
         ('分类与描述', {
