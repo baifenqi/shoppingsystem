@@ -1,0 +1,73 @@
+{% extends 'base.html' %}  <!-- 继承全局母版模板 -->
+
+{% block title %}创建订单 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">确认订单信息</h2>
+
+    <!-- 购物车商品预览 -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light fw-bold">购物车商品</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>商品</th>
+                            <th>单价</th>
+                            <th>数量</th>
+                            <th>小计</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart.items.all %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'products:product_detail' item.product.id %}" class="text-decoration-none">
+                                    {{ item.product.name }}
+                                </a>
+                            </td>
+                            <td>¥{{ item.product.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <!-- 替换原有的小计计算行 -->
+                            <td>¥{{ item.product.price|mul:item.quantity }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td colspan="3" class="text-end">订单总价：</td>
+                            <td>¥{{ total_price }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收货信息表单 -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light fw-bold">收货信息</div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">收货人姓名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                           value="{{ request.user.username }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">收货人电话 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="phone" name="phone" required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">收货地址 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">提交订单</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

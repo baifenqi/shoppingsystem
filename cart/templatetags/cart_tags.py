@@ -1,22 +1,45 @@
-# cart/templatetags/cart_tags.py
-# 导入Django模板库，用于注册自定义过滤器
 from django import template
+from cart.models import Cart
+from decimal import Decimal
 
-# 创建模板库实例（固定写法，必须有这一行）
 register = template.Library()
 
-# 注册自定义过滤器：@register.filter 是装饰器，标记这是一个模板过滤器
-@register.filter(name='mul')  # name='mul' 指定过滤器名称为mul，模板中用{{ 值|mul:参数 }}调用
-def mul(value, arg):
-    """
-    自定义乘法过滤器：用于计算购物车商品小计（数量 * 单价）
-    :param value: 第一个值（模板中|左边的内容,如item.quantity)
-    :param arg: 第二个值（模板中|右边的内容,如item.product.price)
-    :return: 两个值的乘积,若转换失败返回0(避免页面报错)
-    """
+# 1. 购物车总价标签（适配你的Cart模型）
+@register.simple_tag(takes_context=True)
+def cart_total_price(context):
+    """获取当前用户购物车的总价（Decimal类型）"""
+    request = context['request']
+    if not request.user.is_authenticated:
+        return Decimal('0.00')
+    
     try:
-        # 先转换为浮点数（兼容整数/小数价格），再计算乘积
-        return float(value) * float(arg)
-    except (ValueError, TypeError):
-        # 异常处理：若输入非数字（如空值、字符串），返回0，避免页面崩溃
+        cart = Cart.objects.get(user=request.user)
+        return cart.total_price()
+    except Cart.DoesNotExist:
+        return Decimal('0.00')
+
+# 2. 购物车商品数量标签（适配你的Cart模型）
+@register.simple_tag(takes_context=True)
+def cart_item_count(context):
+    """获取当前用户购物车的商品总件数"""
+    request = context['request']
+    if not request.user.is_authenticated:
         return 0
+    
+    try:
+        cart = Cart.objects.get(user=request.user)
+        return cart.item_count()
+    except Cart.DoesNotExist:
+        return 0
+
+# 3. 乘法过滤器（模板中计算商品小计）
+@register.filter
+def mul(value, arg):
+    """乘法过滤器：处理Decimal/int/float类型的乘法，保证精度"""
+    try:
+        # 统一转为Decimal计算
+        value_dec = Decimal(str(value)) if not isinstance(value, Decimal) else value
+        arg_dec = Decimal(str(arg)) if not isinstance(arg, Decimal) else arg
+        return value_dec * arg_dec
+    except (ValueError, TypeError):
+        return Decimal('0.00')

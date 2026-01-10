@@ -1,7 +1,7 @@
 # users/views.py
 # 用户视图函数
 # 处理用户相关的HTTP请求和业务逻辑
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,6 +9,9 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from .forms import UserRegisterForm, UserLoginForm, ProfileUpdateForm
 from .models import CustomUser
+from cart.models import Cart  
+from orders.models import Order
+
 
 def register(request):
     """用户注册视图函数"""
@@ -49,8 +52,9 @@ def user_logout(request):
 
 @login_required
 def profile(request):
-    """用户个人中心视图函数"""
-    if request.method == 'POST':  # 处理POST请求
+    """用户个人中心视图函数（整合个人信息、购物车、订单）"""
+    # 保留你原有：个人资料更新逻辑
+    if request.method == 'POST':  # 处理POST请求（更新个人资料）
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)  # 实例化表单
         if form.is_valid():  # 表单验证通过
             form.save()  # 保存更新
@@ -58,10 +62,42 @@ def profile(request):
             return redirect('users:profile')  # 重定向回个人中心
     else:
         form = ProfileUpdateForm(instance=request.user)  # 创建表单实例
-    return render(request, 'users/profile.html', {'form': form})  # 渲染个人中心模板
+
+    # ========== 新增：整合购物车+订单数据 ==========
+    # 1. 组装用户基础信息（适配你的CustomUser模型）
+    user_info = {
+        'username': request.user.username,
+        'email': request.user.email or '未绑定邮箱',
+        # 适配你的CustomUser模型字段（如果没有phone则注释/修改）
+        'phone': getattr(request.user, 'phone', '未绑定手机号'),
+        'date_joined': request.user.date_joined.strftime('%Y-%m-%d'),  # 注册时间
+    }
+    
+    # 2. 获取购物车信息（适配你的Cart模型）
+    cart, created = Cart.objects.get_or_create(user=request.user)
+    cart_info = {
+        'items': cart.items.all(),  # 购物车商品列表
+        'total_price': cart.total_price(),  # 购物车总价（调用你模型的方法）
+        'item_count': cart.item_count(),  # 购物车商品数量（调用你模型的方法）
+    }
+    
+    # 3. 获取订单信息（最近5条，按创建时间倒序）
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
+    all_orders_count = Order.objects.filter(user=request.user).count()  # 订单总数
+
+    # ========== 组装最终上下文（保留原有form + 新增数据） ==========
+    context = {
+        'form': form,  # 原有：个人资料表单
+        'user_info': user_info,  # 新增：用户基础信息
+        'cart_info': cart_info,  # 新增：购物车信息
+        'recent_orders': orders,  # 新增：最近订单
+        'all_orders_count': all_orders_count,  # 新增：订单总数
+    }
+    
+    return render(request, 'users/profile.html', context)  # 渲染个人中心模板
 
 @login_required
 def profile_detail(request, username):
     """查看其他用户资料视图函数"""
-    user = CustomUser.objects.get(username=username)  # 获取指定用户
+    user = get_object_or_404(CustomUser, username=username)  # 获取指定用户
     return render(request, 'users/profile_detail.html', {'profile_user': user})  # 渲染用户资料模板

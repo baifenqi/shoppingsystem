@@ -38,10 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'products', #商品应用
-    'cart', #购物车应用
+    'products', 
+    'cart', 
     'users',
     'recommendations',
+    'orders'
 ]
 
 
@@ -131,3 +132,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'#2025/12/27/23：36添加
+
+
+# 自定义Admin站点，隐藏无关应用
+ADMIN_REORDER = [
+    # 只显示核心模块，顺序自定义
+    {'app': 'products', 'models': ['products.Product', 'products.Category']},
+    {'app': 'orders', 'models': ['orders.Order', 'orders.OrderItem']},
+    # 隐藏 users/cart 等模块
+]

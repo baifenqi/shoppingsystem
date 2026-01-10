@@ -1,5 +1,3 @@
-# products/admin.py
-
 from django.contrib import admin                #导入Django内置的管理后台框架
 from django.utils.html import format_html       #导入HTML格式化工具
 from .models import (                           #从models.py导入所有数据表模型
@@ -33,7 +31,8 @@ class ProductImageInline(admin.TabularInline):#以表格形式显示内联内容
             #安全生成HTML，防止XSS攻击，自动转义特殊字符，src="{}"：图片URL，用obj.image.url填充，width="100" height="80"：固定尺寸
             #style="object-fit: cover;"：CSS属性，保持比例填充
         return "暂无图片"
-    preview_image.short_descreptiom = "图片预览"
+    # 修正：原拼写错误 short_descreptiom → short_description
+    preview_image.short_description = "图片预览"
 
 
 class InventoryInline(admin.TabularInline):
@@ -49,6 +48,8 @@ class InventoryInline(admin.TabularInline):
     verbose_name_plural = "库存SKU列表"
     fields = [('color','size'),('count','price'),'sku','is_active']
     autocomplete_fields = ['color','size'] #搜索选择颜色/尺寸
+    # 新增：快速编辑库存状态，支持列表页直接启用/禁用SKU
+    list_editable = ['is_active']
 
 
 class ProductAttributeValueInline(admin.TabularInline):
@@ -69,11 +70,12 @@ class ProductAttributeValueInline(admin.TabularInline):
 
 # ========== 注册独立模型 ==========
 @admin.register(Size)
-
 class SizeAdmin(admin.ModelAdmin):
     list_display = ['name', 'code', 'order']
     search_fields = ['name']
     ordering = ['order']
+    # 新增：支持列表页快速编辑排序，方便规格管理
+    list_editable = ['order']
 #size like:
 #┌─────────┬──────┬──────┐
 #│ 名称    │ 编码 │ 排序  │
@@ -86,11 +88,12 @@ class SizeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Color)
-
 class ColorAdmin(admin.ModelAdmin):
     list_display = ['name','code','color_preview','order']
     search_fields = ['name']
     ordering = ['order']
+    # 新增：支持列表页快速编辑排序，方便颜色管理
+    list_editable = ['order']
 
     def color_preview(self, obj):
         """显示颜色块预览"""
@@ -119,6 +122,8 @@ class ProductAttributeAdmin(admin.ModelAdmin):
     list_display = ['name', 'is_required', 'order']
     search_fields = ['name']
     ordering = ['order']
+    # 新增：支持列表页快速编辑是否必填、排序，方便属性管理
+    list_editable = ['is_required', 'order']
 
 
 #ProductAttribute表存储的是属性名定义like:
@@ -136,7 +141,6 @@ class ProductAttributeAdmin(admin.ModelAdmin):
 
 
 # ========== 注册核心模型（商品+分类） ==========
-
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):                                          #name：分类名称
     list_display = ['name','parent','order','is_active','children_count']       #parent：父级分类（实现层级关系）
@@ -144,6 +148,8 @@ class CategoryAdmin(admin.ModelAdmin):                                          
     search_fields = ['name']                                                    #is_active：是否激活 ->上架or下架
     ordering = ['order']                                                        #children_count：子分类数量（自定义方法）
     autocomplete_fields = ['parent'] #搜索选择父分类
+    # 新增：支持列表页快速编辑是否激活、排序，方便分类上架管理
+    list_editable = ['is_active', 'order']
 
     def children_count(self, obj):
         """显示子级分类"""
@@ -153,10 +159,11 @@ class CategoryAdmin(admin.ModelAdmin):                                          
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'sku', 'category', 'price', 'stock', 'status', 'is_featured']#name：商品名称 sku：商品编码（唯一标识）category：所属分类 price：价格 stock：库存总量status：商品状态（自定义属性）is_featured：是否推荐商品
-    list_filter = ['status', 'is_featured', 'category']
-    search_fields = ['name', 'sku']
+    list_filter = ['status', 'is_featured', 'category']  
     ordering = ['-created_at']
     readonly_fields = ['stock', 'view_count', 'sales_count', 'created_at', 'updated_at']#stock：由Inventory自动计算view_count：浏览数，由系统统计sales_count：销量，由订单系统更新 created_at/updated_at：自动时间戳
+    # 核心优化：支持列表页快速编辑商品状态（上架/下架）、是否推荐，无需进入详情页
+    list_editable = ['status', 'is_featured', 'price']
 
   #商品列表页
 #┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -174,7 +181,7 @@ class ProductAdmin(admin.ModelAdmin):
     # 分栏显示字段，更清晰
     fieldsets = (
         ('基础信息', {
-            'fields': (('name', 'sku'), ('slug', 'status'), 'is_featured')
+            'fields': (('name', 'sku'), ('slug', 'status'), 'is_featured', 'is_active')  # 新增：补充is_active字段，控制商品是否上架
         }),
 
         ('分类与描述', {
@@ -191,36 +198,3 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
     autocomplete_fields = ['category']  # 搜索选择分类
-
-
-
-
-#完整效果：
-
-"""
-════════════════════
-
-■ 基础信息
-名称:   [iPhone 15          ]     SKU:    [IPH15_128G       ]
-Slug:  [iphone-15         ]     状态:    [在售            ]
-推荐商品: [✓ 设为推荐商品     ]
-
-■ 分类与描述
-分类:   [手机              ▼]
-简短描述: [最新款iPhone...     ]
-详细描述: [<富文本编辑器>      ]
-
-■ 价格与库存
-价格:   [5999.00           ]
-库存:   [156               ] ← 只读,由库存SKU自动计算
-
-■ 统计信息 ▼（点击展开）
-浏览数:  [1245             ]
-销量:   [89               ]
-创建时间:[2024-01-15 10:30 ]
-更新时间:[2024-01-20 14:15 ]
-
-════════════════════
-以下为内联管理部分
-════════════════════   """
-  

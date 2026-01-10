@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}我的订单 - PyShop{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">我的订单</h2>
+
+    {% if orders %}
+    <div class="list-group">
+        {% for order in orders %}
+        <div class="list-group-item list-group-item-action mb-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    订单编号：{{ order.id }}
+                    <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'paid' %}primary{% elif order.status == 'shipped' %}info{% elif order.status == 'delivered' %}success{% else %}danger{% endif %} ms-2">
+                        {{ order.get_status_display }}
+                    </span>
+                </h5>
+                <small class="text-muted">{{ order.created_at|date:"Y-m-d H:i" }}</small>
+            </div>
+            <div class="mt-2">
+                <p class="mb-1">收货人：{{ order.full_name }} | 电话：{{ order.phone }}</p>
+                <p class="mb-1">地址：{{ order.address }}</p>
+                <p class="fw-bold mb-1">订单总价：¥{{ order.total_price }}</p>
+            </div>
+            <div class="mt-3">
+                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-primary">查看详情</a>
+                {% if order.status == 'pending' %}
+                <button class="btn btn-sm btn-success" onclick="updateStatus('{{ order.id }}', 'paid')">标记为已付款</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 状态更新表单（隐藏，通过JS提交） -->
+    <form id="statusForm" method="POST" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" name="status" id="statusInput">
+    </form>
+    {% else %}
+    <div class="text-center py-5">
+        <img src="https://via.placeholder.com/100x100?text=📦" alt="无订单" class="mb-3">
+        <h4>暂无订单记录</h4>
+        <p class="text-muted">快去下单吧～</p>
+        <a href="{% url 'products:product_list' %}" class="btn btn-primary mt-2">去购物</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// 订单状态更新JS
+function updateStatus(orderId, status) {
+    const form = document.getElementById('statusForm');
+    form.action = `/orders/update-status/${orderId}/`;
+    document.getElementById('statusInput').value = status;
+    form.submit();
+}
+</script>
+{% endblock %}
